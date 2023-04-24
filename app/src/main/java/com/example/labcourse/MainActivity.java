@@ -4,6 +4,8 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Context;
 import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.hardware.TriggerEvent;
 import android.hardware.TriggerEventListener;
@@ -13,7 +15,7 @@ import android.widget.TextView;
 
 import com.example.labcourse.databinding.ActivityMainBinding;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     // Used to load the 'labcourse' library on application startup.
     static {
@@ -22,7 +24,7 @@ public class MainActivity extends AppCompatActivity {
 
     private ActivityMainBinding binding;
     private SensorManager sensorManager;
-    private Sensor sensor;
+    private Sensor accelerometer; // changed sensor name to accelerometer
     private TriggerEventListener triggerEventListener;
 
 
@@ -38,7 +40,8 @@ public class MainActivity extends AppCompatActivity {
         tv.setText(stringFromJNI());
 
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        sensor = sensorManager.getDefaultSensor(Sensor.TYPE_SIGNIFICANT_MOTION);
+        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER); // changed accelerometer sensor type to TYPE_ACCELEROMETER
+        sensorManager.registerListener(this, accelerometer, SensorManager.SENSOR_DELAY_NORMAL); // registering listener to accelerometer
 
         triggerEventListener = new TriggerEventListener() {
             @Override
@@ -47,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        sensorManager.requestTriggerSensor(triggerEventListener, sensor);
+        sensorManager.requestTriggerSensor(triggerEventListener, accelerometer);
     }
 
     /**
@@ -55,4 +58,22 @@ public class MainActivity extends AppCompatActivity {
      * which is packaged with this application.
      */
     public native String stringFromJNI();
+
+    // implementing methods from SensorEventListener
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent) {
+        //if sensors type that changed is equals TYPE_ACCELEROMETER, logging x, y, z values of it
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            float x = sensorEvent.values[0];
+            float y = sensorEvent.values[1];
+            float z = sensorEvent.values[2];
+
+            Log.d("Accelerometer", "X: " + x + ", Y: " + y + ", Z: " + z);
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+
+    }
 }
